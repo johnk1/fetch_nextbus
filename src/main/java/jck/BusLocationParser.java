@@ -1,31 +1,48 @@
 package jck;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
-public class BusLocationParser {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public final class BusLocationParser {
+    private static final Logger log = LoggerFactory.getLogger(BusLocationParser.class);
     private static Gson gson;
     static {
         gson = new Gson();
     }
 
-    static Collection<BusLocation> parse(String json) {
-        ArrayList<BusLocation> busses = new ArrayList<>();
+    public static String format(Collection<BusLocation> busses) {
+        return gson.toJson(busses);
+    }
 
-        ResponseJson response = gson.fromJson(json, ResponseJson.class);
-        for (VehicleJson parsedVehicle : response.vehicle) {
-            busses.add(fromVehicleJson(parsedVehicle));
+    public static Collection<BusLocation> parse(String json) {
+        ArrayList<BusLocation> busses = new ArrayList<>();
+        try {
+            ResponseJson response = gson.fromJson(json, ResponseJson.class);
+            if (response != null && response.vehicle != null && response.lastTime != null) {
+                Instant reportTime = Instant.ofEpochMilli(response.lastTime.time);
+                for (VehicleJson parsedVehicle : response.vehicle) {
+                    busses.add(fromVehicleJson(parsedVehicle, reportTime));
+                }
+            }
+        } catch (JsonSyntaxException ex) {
+            log.info("GSON couldn't parse string. Start of string is \'{}\'",
+                    json.substring(0, Math.min(50, json.length())), ex);
         }
 
         return busses;
-
     }
 
-    static private BusLocation fromVehicleJson(VehicleJson vehicleJson) {
+    static private BusLocation fromVehicleJson(VehicleJson vehicleJson, Instant reportTime) {
         return new BusLocation(vehicleJson.id, new Position(vehicleJson.lat, vehicleJson.lon), vehicleJson.routeTag,
-                vehicleJson.dirTag, vehicleJson.speedKmHr, vehicleJson.heading, vehicleJson.secsSinceReport);
+                vehicleJson.dirTag, vehicleJson.speedKmHr, vehicleJson.heading,
+                reportTime.minusSeconds(vehicleJson.secsSinceReport));
     }
 
     class VehicleJson {

@@ -43,7 +43,7 @@
         </dependency>
 
         <!-- Rookout for remote debugging in AWS -->
-        <dependency>
+        <!-- <dependency>
             <groupId>com.rookout</groupId>
             <artifactId>rook</artifactId>
             <version>0.1.54</version>
@@ -52,7 +52,7 @@
             <groupId>com.sun</groupId>
             <artifactId>tools</artifactId>
             <version>1.7.0.13</version>
-        </dependency>
+        </dependency> -->
 
 
         <dependency>

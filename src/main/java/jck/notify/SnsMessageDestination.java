@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jck.BusLocation;
+import jck.BusLocationParser;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.NotFoundException;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
@@ -19,8 +20,11 @@ public class SnsMessageDestination implements MessageDestination {
     
     public void send(Collection<BusLocation> busses) {
         try {
-            PublishResponse response = SnsClient.create().publish((builder) -> {
-                builder.topicArn(System.getProperty(SNS_TOPIC_ARN)).message("aaa").build();
+            String bussesJson = BusLocationParser.format(busses);
+            log.debug("Will send {} byte message to SNS topic {}.", bussesJson.getBytes().length, System.getenv(SNS_TOPIC_ARN));
+
+            PublishResponse response = SnsClient.create().publish(builder -> {
+                builder.topicArn(System.getenv(SNS_TOPIC_ARN)).message(bussesJson).build();
             });
 //             if (response.messageId())
         } catch (NotFoundException notFoundEx) {

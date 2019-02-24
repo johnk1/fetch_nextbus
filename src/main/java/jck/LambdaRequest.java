@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.rookout.rook.API;
+// import com.rookout.rook.API;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +19,14 @@ public class LambdaRequest implements RequestHandler<Void, Void> {
     private MessageDestination messageDestination = new SnsMessageDestination();
    
     public Void handleRequest(Void input, Context context) {
-        API.Load();
+       //  API.Load();
         
         // input could also be ScheduledEvent from aws-lambda-java-events
         try {
             Collection<BusLocation> busses = client.get();
-           //  String busString = busses.stream().map(BusLocation::toString).collect(joining(" "));
             if (!busses.isEmpty()) {
-                log.info(busses.stream().map(BusLocation::toString).collect(Collectors.joining(" ")));
+                log.debug(busses.stream().map(BusLocation::toCtorString).collect(Collectors.joining("\n")));
+                //log.debug(busses.stream().map(BusLocation::toString).collect(Collectors.joining(" ")));
                 messageDestination.send(busses);
             } else {
                 log.info("No bus information was retrieved.");
